@@ -1,0 +1,192 @@
+From fc5a995e240d6c52ff3811828a3815c605fd55c9 Mon Sep 17 00:00:00 2001
+From: khushi Nirmal <khushinirmal025@gmail.com>
+Date: Tue, 25 Oct 2022 13:02:10 +0530
+Subject: [PATCH] Create Patch File
+
+---
+ .idea/.gitignore                              |  3 ++
+ .../inspectionProfiles/profiles_settings.xml  |  6 +++
+ .idea/jpmc-task-2.iml                         | 12 ++++++
+ .idea/modules.xml                             |  8 ++++
+ .idea/vcs.xml                                 |  6 +++
+ src/App.tsx                                   | 37 ++++++++++++++++++-
+ src/Graph.tsx                                 |  9 ++++-
+ 7 files changed, 79 insertions(+), 2 deletions(-)
+ create mode 100644 .idea/.gitignore
+ create mode 100644 .idea/inspectionProfiles/profiles_settings.xml
+ create mode 100644 .idea/jpmc-task-2.iml
+ create mode 100644 .idea/modules.xml
+ create mode 100644 .idea/vcs.xml
+
+diff --git a/.idea/.gitignore b/.idea/.gitignore
+new file mode 100644
+index 0000000..26d3352
+--- /dev/null
++++ b/.idea/.gitignore
+@@ -0,0 +1,3 @@
++# Default ignored files
++/shelf/
++/workspace.xml
+diff --git a/.idea/inspectionProfiles/profiles_settings.xml b/.idea/inspectionProfiles/profiles_settings.xml
+new file mode 100644
+index 0000000..105ce2d
+--- /dev/null
++++ b/.idea/inspectionProfiles/profiles_settings.xml
+@@ -0,0 +1,6 @@
++<component name="InspectionProjectProfileManager">
++  <settings>
++    <option name="USE_PROJECT_PROFILE" value="false" />
++    <version value="1.0" />
++  </settings>
++</component>
+\ No newline at end of file
+diff --git a/.idea/jpmc-task-2.iml b/.idea/jpmc-task-2.iml
+new file mode 100644
+index 0000000..8b8c395
+--- /dev/null
++++ b/.idea/jpmc-task-2.iml
+@@ -0,0 +1,12 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<module type="PYTHON_MODULE" version="4">
++  <component name="NewModuleRootManager">
++    <content url="file://$MODULE_DIR$" />
++    <orderEntry type="inheritedJdk" />
++    <orderEntry type="sourceFolder" forTests="false" />
++  </component>
++  <component name="PyDocumentationSettings">
++    <option name="format" value="PLAIN" />
++    <option name="myDocStringFormat" value="Plain" />
++  </component>
++</module>
+\ No newline at end of file
+diff --git a/.idea/modules.xml b/.idea/modules.xml
+new file mode 100644
+index 0000000..c9be963
+--- /dev/null
++++ b/.idea/modules.xml
+@@ -0,0 +1,8 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="ProjectModuleManager">
++    <modules>
++      <module fileurl="file://$PROJECT_DIR$/.idea/jpmc-task-2.iml" filepath="$PROJECT_DIR$/.idea/jpmc-task-2.iml" />
++    </modules>
++  </component>
++</project>
+\ No newline at end of file
+diff --git a/.idea/vcs.xml b/.idea/vcs.xml
+new file mode 100644
+index 0000000..94a25f7
+--- /dev/null
++++ b/.idea/vcs.xml
+@@ -0,0 +1,6 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="VcsDirectoryMappings">
++    <mapping directory="$PROJECT_DIR$" vcs="Git" />
++  </component>
++</project>
+\ No newline at end of file
+diff --git a/src/App.tsx b/src/App.tsx
+index 0728518..dc3dc22 100755
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -3,13 +3,33 @@ import DataStreamer, { ServerRespond } from './DataStreamer';
+ import Graph from './Graph';
+ import './App.css';
+ 
++/**
++ * State declaration for <App />
++ */
+ /**
+  * State declaration for <App />
+  */
+ interface IState {
+   data: ServerRespond[],
++  showGraph: boolean,
+ }
+ 
++/**
++ * The parent element of the react app.
++ * It renders title, button and Graph react element.
++ */
++class App extends Component<{}, IState> {
++  constructor(props: {}) {
++    super(props);
++
++    this.state = {
++      // data saves the server responds.
++      // We use this state to parse data down to the child element (Graph) as element property
++      data: [],
++      showGraph: false,
++    };
++  }
+++
+ /**
+  * The parent element of the react app.
+  * It renders title, button and Graph react element.
+@@ -29,18 +49,33 @@ class App extends Component<{}, IState> {
+    * Render Graph react component with state.data parse as property data
+    */
+   renderGraph() {
++    if (this.state.showGraph){
+     return (<Graph data={this.state.data}/>)
++    }
+   }
+ 
+   /**
+    * Get new data from server and update the state with the new data
+    */
+   getDataFromServer() {
++    let x = 0;
++  const interval = setInterval(() => {
+     DataStreamer.getData((serverResponds: ServerRespond[]) => {
++      // getData() gets the data from the server and when that process is complete
+       // Update the state by creating a new array of data that consists of
+       // Previous data in the state and the new data from server
+-      this.setState({ data: [...this.state.data, ...serverResponds] });
++      this.setState({
++        data: serverResponds,
++        showGraph: true,
++        // set showGraph to true
++        // as soon as the data from the server comes back to the requester
++      });
+     });
++    x++;
++    if (x > 1000){
++      clearInterval(interval);
++    }
++  },100);
+   }
+ 
+   /**
+diff --git a/src/Graph.tsx b/src/Graph.tsx
+index 3b2a7da..efa5be5 100644
+--- a/src/Graph.tsx
++++ b/src/Graph.tsx
+@@ -14,7 +14,7 @@ interface IProps {
+  * Perspective library adds load to HTMLElement prototype.
+  * This interface acts as a wrapper for Typescript compiler.
+  */
+-interface PerspectiveViewerElement {
++interface PerspectiveViewerElement extends HTMLElement{
+   load: (table: Table) => void,
+ }
+ 
+@@ -57,6 +57,13 @@ class Graph extends Component<IProps, {}> {
+     if (this.table) {
+       // As part of the task, you need to fix the way we update the data props to
+       // avoid inserting duplicated entries into Perspective table again.
++      elem.load(this.table);
++      elem.setAttribute('view','y_line');
++      elem.setAttribute('column-pivots','["stock"]');
++      elem.setAttribute('row-pivots','["timestamp"]');
++      elem.setAttribute('columns','["top_ask_price"]');
++      elem.setAttribute('aggregates', `{"stock":"distinct count","top_ask_price":"avg","top_bid_price":"avg","timestamp":"distinct count"}`);
++
+       this.table.update(this.props.data.map((el: any) => {
+         // Format the data from ServerRespond to the schema
+         return {
+-- 
+2.38.0.windows.1
+
